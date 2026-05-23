@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Jugadores - Data Athletics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            background: white;
+        }
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark navbar-custom mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fa-solid fa-database me-2"></i> DATA ATHLETICS
+            </a>
+            <span class="navbar-text text-white-50">
+                Módulo: Plantilla de Jugadores
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        
+        <div class="mb-4">
+            <a href="/" class="btn btn-outline-secondary rounded-pill">
+                <i class="fa-solid fa-arrow-left me-2"></i>Volver al Dashboard
+            </a>
+        </div>
+
+        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            <strong>Error de Persistencia:</strong> Hubo un problema al procesar la solicitud en MySQL. Revisa las restricciones de integridad.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="card card-custom p-4">
+                    <h4 class="fw-bold text-dark mb-3">
+                        <i class="fa-solid fa-user-plus text-success me-2"></i>Inscribir Jugador
+                    </h4>
+                    <p class="text-muted small">Registra un nuevo deportista asignándolo directamente a un Club (Vínculo de Clave Foránea N:1).</p>
+                    <hr>
+                    
+                    <form th:action="@{/jugadores/guardar}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Nombre Completo</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" name="nombre" class="form-control" placeholder="Ej: Lionel Messi" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Posición / Rol</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-shirt"></i></span>
+                                <input type="text" name="posicion" class="form-control" placeholder="Ej: Delantero o Mediocampista" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Número de Dorsal</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-arrow-1-9"></i></span>
+                                <input type="number" name="numero" class="form-control" placeholder="Ej: 10" min="1" max="99" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary">Asignar a Club (FK N:1)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                                <select name="idClub" class="form-select" required>
+                                    <option value="" selected disabled>Seleccionar Club...</option>
+                                    <option th:each="club : ${clubes}" th:value="${club.id}" th:text="${club.nombre}"></option>
+                                </select>
+                            </div>
+                            <div class="form-text text-muted small">Solo aparecerán clubes registrados previamente.</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 rounded-pill fw-medium py-2">
+                            <i class="fa-solid fa-floppy-disk me-2"></i>Guardar en MySQL
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="table-container p-4">
+                    <h4 class="fw-bold text-dark mb-4">
+                        <i class="fa-solid fa-list-ul text-success me-2"></i>Fichas de Jugadores
+                    </h4>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light text-secondary text-uppercase small font-weight-bold">
+                                <tr>
+                                    <th style="width: 10%">ID</th>
+                                    <th style="width: 35%">Jugador</th>
+                                    <th style="width: 20%">Posición</th>
+                                    <th style="width: 10%" class="text-center">Dorsal</th>
+                                    <th style="width: 15%"><i class="fa-solid fa-shield-halved me-1"></i> Club (FK)</th>
+                                    <th style="width: 10%" class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="j : ${jugadores}">
+                                    <td th:text="${j.id}" class="fw-bold text-secondary"></td>
+                                    <td th:text="${j.nombre}" class="fw-bold text-dark"></td>
+                                    <td th:text="${j.posicion}" class="text-muted"></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border fw-bold px-2.5 py-1.5" th:text="${j.dorsal}"></span>
+                                    </td>
+                                    
+                                    <td th:text="${j.club != null ? j.club.nombre : 'Agente Libre'}"
+                                        th:classappend="${j.club == null} ? 'text-danger italic' : 'text-primary fw-medium'">
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        <form th:action="@{/jugadores/eliminar}" method="POST" onsubmit="return confirm('¿Está seguro de dar de baja a este jugador de la base de datos?');">
+                                            <input type="hidden" name="id" th:value="${j.id}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(jugadores)}">
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="fa-solid fa-folder-open fa-2x mb-2 d-block text-success" style="opacity: 0.5;"></i>
+                                        No hay deportistas inscritos en las tablas de MySQL.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
